@@ -1,56 +1,126 @@
-use axum::{routing::post, Json, Router, extract::State};
+use axum::{routing::{post, get}, Json, Router};
 use lapin::{options::*, types::FieldTable, Connection, ConnectionProperties, BasicProperties};
+use prometheus::{Encoder, TextEncoder, Registry, Counter, Histogram, opts, histogram_opts};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-struct AiRequest {
+#[derive(Serialize, Deserialize)]
+struct GenerateRequest {
     prompt: String,
-    client_id: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct GenerateResponse {
+    message: String,
 }
 
 struct AppState {
-    amqp_conn: Connection,
+    channel: lapin::Channel,
+    api_requests: Counter,
+    api_failures: Counter,
+    api_latency: Histogram,
 }
 
-// Tokio for parallel processing the incoming traffic
-// Automatically spawn threads using CPU cores
 #[tokio::main]
 async fn main() {
-    let addr = "amqp://127.0.0.1:5672/%2f";
-    let conn = Connection::connect(addr, ConnectionProperties::default()).await.unwrap();
+    let conn = Connection::connect(
+        "amqp://127.0.0.1:5672/%2f",
+        ConnectionProperties::default()
+    ).await.unwrap();
+
     let channel = conn.create_channel().await.unwrap();
 
-    channel.queue_declare("wai_prompts", QueueDeclareOptions::default(), FieldTable::default()).await.unwrap();
+    channel.queue_declare(
+        "LLM_INFERENCE",
+        QueueDeclareOptions::default(),
+        FieldTable::default()
+    ).await.unwrap();
 
-    //Share the one time resource created across the routes
-    let shared_state = Arc::new(AppState { amqp_conn: conn });
+    // Prometheus
+    let registry = Registry::new();
 
-    //API route
+    let api_requests = Counter::with_opts(opts!(
+        "api_requests_total",
+        "Total API requests"
+    )).unwrap();
+
+    let api_failures = Counter::with_opts(opts!(
+        "api_failures_total",
+        "Total failed API requests"
+    )).unwrap();
+
+    let api_latency = Histogram::with_opts(histogram_opts!(
+        "api_latency_ms",
+        "API latency",
+        vec![10.0,50.0,100.0,200.0,500.0,1000.0]
+    )).unwrap();
+
+    registry.register(Box::new(api_requests.clone())).unwrap();
+    registry.register(Box::new(api_failures.clone())).unwrap();
+    registry.register(Box::new(api_latency.clone())).unwrap();
+
+    let state = Arc::new(AppState {
+        channel,
+        api_requests,
+        api_failures,
+        api_latency
+    });
+
     let app = Router::new()
-        .route("/generate", post(handle_client_request))
-        .with_state(shared_state);
+        .route("/api/v1/generate", post(generate))
+        .route("/metrics", get(metrics))
+        .with_state(state);
 
-    println!("wAI Rust Backend running on port 4000");
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:4000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+
+    println!("Server running on 3000");
+
     axum::serve(listener, app).await.unwrap();
 }
 
-// Handler function
-async fn handle_client_request(
-    State(state): State<Arc<AppState>>,
-    Json(payload): Json<AiRequest>,
-) -> String {
-    let channel = state.amqp_conn.create_channel().await.unwrap();
-    let payload_bytes = serde_json::to_vec(&payload).unwrap();
+async fn generate(
+    axum::extract::State(state): axum::extract::State<Arc<AppState>>,
+    Json(payload): Json<GenerateRequest>
+) -> Json<GenerateResponse> {
 
-    // Push to Queue
-    channel.basic_publish(
-        "", "wai_prompts",
+    state.api_requests.inc();
+
+    let timer = state.api_latency.start_timer();
+
+    let message = serde_json::to_vec(&payload).unwrap();
+
+    match state.channel.basic_publish(
+        "",
+        "LLM_INFERENCE",
         BasicPublishOptions::default(),
-        &payload_bytes,
-        BasicProperties::default(),
-    ).await.unwrap();
+        &message,
+        BasicProperties::default()
+    ).await {
 
-    format!("Prompt enqueued for client: {}", payload.client_id)
+        Ok(_) => {
+            timer.observe_duration();
+
+            Json(GenerateResponse {
+                message: "Request enqueued".to_string()
+            })
+        }
+
+        Err(_) => {
+            state.api_failures.inc();
+            timer.observe_duration();
+
+            Json(GenerateResponse {
+                message: "Failed".to_string()
+            })
+        }
+    }
+}
+
+async fn metrics() -> String {
+    let encoder = TextEncoder::new();
+    let metric_families = prometheus::gather();
+    let mut buffer = Vec::new();
+    encoder.encode(&metric_families, &mut buffer).unwrap();
+
+    String::from_utf8(buffer).unwrap()
 }
