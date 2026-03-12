@@ -52,7 +52,7 @@ async fn main() {
                 "prompt": payload.prompt,
                 "stream": false,
                 "options": {
-                    "temprature": 0.2,
+                    "temperature": 0.2,
                     "num_predict": 40,
                     "top_p": 0.9,
                     "repeat_penalty": 1.1,
