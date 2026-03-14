@@ -1,5 +1,6 @@
 # Architecture
 
+```mermaid
 flowchart TD
     REST["REST API - Axum Router"]
     WS["WebSocket Endpoint /ws"]
