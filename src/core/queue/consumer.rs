@@ -45,9 +45,9 @@ pub async fn run(state: Arc<AppState>) {
 
         println!("Received prompt: {}", payload.prompt);
 
-        // TODO: move this later to llm module
-        let response = reqwest::Client::new()
-            .post("http://localhost:11434/api/generate")
+        let response = state
+            .http_client
+            .post(format!("{}/api/generate", state.config.ollama_url))
             .json(&serde_json::json!({
                 "model": "llama3.2",
                 "prompt": payload.prompt,
