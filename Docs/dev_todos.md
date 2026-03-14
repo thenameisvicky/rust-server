@@ -9,11 +9,29 @@
 
 # March 15 2026
 
-[] Implement prometheus scraping and create grafana dashboard.
+[] Implement prometheus scraping track metrics every metrics needed.
+[] Build grafana dashboard.
+[] Decide what logs to store and what not from docker container/prometheus.
 [] Deploy backend in Railway with github action - in a machine with same spec as personal laptop.
-[] Implement HLD - billing system.
 
-# March 16 2026
+# March 21 2026
 
-[] Test this performance.
-[] Explore how to publish this as a docker image to contribute to open-source community.
+[] Build wAI client simple one.
+[] Implement fake RAG.
+[] Build perfect system prompt and choose a perfect model for text generation.
+
+# March 22 2026
+
+[] Calculate resource usage (RAM, ROM, CPU).
+[] Calculate infra cost for this MVP.
+[] Plan money saving plan to build home server.
+
+# Upcoming todos
+
+[] Wireup with database.
+[] Test the app comeup with scale,metrics and limits.
+[] Share client to customers (Kongu Icecreams, satheesh studio).
+[] Implement real RAG.
+[] Bring in billing system integerating chargebee or stripe.
+[] Split RelayAI from wAI explore distrubutions.
+[] Calculate infra cost and strategize cost cutting for RelayAI.

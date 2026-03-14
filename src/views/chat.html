@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>LLM Chat Client</title>
+    <title>RelayAI</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -35,7 +35,11 @@
     </style>
   </head>
   <body>
-    <h2>LLM Chat Client</h2>
+    <h2>RelayAI</h2>
+    <p>
+      A real-time AI messaging engine that generates and delivers personalized
+      messages using user data, RAG pipelines, and LLMs
+    </p>
 
     <input id="prompt" placeholder="Enter prompt..." />
     <button onclick="generate()">Generate</button>
@@ -44,10 +48,10 @@
 
     <script>
       let ws;
+      let client_id = null;
       let reconnectInterval = 2000;
       let connected = false;
 
-      // Output div
       const output = document.getElementById("output");
 
       function connectWS() {
@@ -59,6 +63,12 @@
         };
 
         ws.onmessage = (event) => {
+          if (event.data.startsWith("CLIENT_ID:")) {
+            clientId = event.data.replace("CLIENT_ID:", "");
+            console.log("Client ID:", clientId);
+            return;
+          }
+
           const loadingElem = document.querySelector(".loading");
           if (loadingElem) loadingElem.remove();
 

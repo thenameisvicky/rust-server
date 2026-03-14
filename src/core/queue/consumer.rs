@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 #[derive(Deserialize)]
 struct JobPayload {
+    client_id: String,
     prompt: String,
 }
 
@@ -45,7 +46,7 @@ pub async fn run(state: Arc<AppState>) {
 
         println!("Received prompt: {}", payload.prompt);
 
-        let response = state
+        let response = match state
             .http_client
             .post(format!("{}/api/generate", state.config.ollama_url))
             .json(&serde_json::json!({
@@ -55,7 +56,21 @@ pub async fn run(state: Arc<AppState>) {
             }))
             .send()
             .await
-            .unwrap();
+        {
+            Ok(r) => r,
+            Err(err) => {
+                let tx = {
+                    let clients = state.clients.lock().await;
+                    clients.get(&payload.client_id).cloned()
+                };
+
+                if let Some(tx) = tx {
+                    let _ = tx.send(format!("LLM error: {}", err)).await;
+                }
+
+                continue;
+            }
+        };
 
         let body = response.text().await.unwrap();
 
@@ -63,8 +78,13 @@ pub async fn run(state: Arc<AppState>) {
 
         println!("LLM response {:?}", llm_resp);
 
-        if let Err(err) = state.ws_tx.send(llm_resp.response.clone()) {
-            eprintln!("Error sending to WS clients: {:?}", err);
+        let tx = {
+            let clients = state.clients.lock().await;
+            clients.get(&payload.client_id).cloned()
+        };
+
+        if let Some(tx) = tx {
+            let _ = tx.send(llm_resp.response.clone()).await;
         }
 
         delivery.ack(BasicAckOptions::default()).await.unwrap();

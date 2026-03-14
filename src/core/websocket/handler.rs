@@ -3,7 +3,10 @@ use axum::{
     extract::State,
     response::IntoResponse,
 };
+use futures_util::{SinkExt, StreamExt};
 use std::sync::Arc;
+use tokio::sync::mpsc;
+use uuid::Uuid;
 
 use crate::state::AppState;
 
@@ -15,9 +18,32 @@ pub async fn ws_handler(
 }
 
 async fn handle_socket(mut socket: WebSocket, state: Arc<AppState>) {
-    let mut rx = state.ws_tx.subscribe();
+    let client_id = Uuid::new_v4().to_string();
 
-    while let Ok(msg) = rx.recv().await {
-        socket.send(Message::Text(msg.into())).await.unwrap();
-    }
+    let (tx, mut rx) = mpsc::channel::<String>(100);
+
+    state.clients.lock().await.insert(client_id.clone(), tx);
+
+    let (mut sender, mut receiver) = socket.split();
+
+    sender
+        .send(Message::Text(format!("CLIENT_ID:{}", client_id)))
+        .await
+        .ok();
+
+    println!("Client connected {}", client_id);
+
+    tokio::spawn(async move {
+        while let Some(msg) = rx.recv().await {
+            if sender.send(Message::Text(msg)).await.is_err() {
+                break;
+            }
+        }
+    });
+
+    while let Some(_) = receiver.next().await {}
+
+    state.clients.lock().await.remove(&client_id);
+
+    println!("Client disconnected {}", client_id);
 }

@@ -3,7 +3,8 @@ use std::sync::Arc;
 use lapin::{Connection, ConnectionProperties};
 use prometheus::{Counter, Registry};
 use reqwest::Client;
-use tokio::sync::broadcast;
+use std::collections::HashMap;
+use tokio::sync::{broadcast, Mutex};
 
 mod api;
 mod core;
@@ -18,8 +19,6 @@ async fn main() {
         .await
         .unwrap();
 
-    let (ws_tx, _) = broadcast::channel(100);
-
     let registry = Registry::new();
 
     let api_requests = Counter::new("api_requests_total", "Total API").unwrap();
@@ -28,13 +27,13 @@ async fn main() {
 
     let state = Arc::new(AppState {
         amqp: Arc::new(conn),
-        ws_tx,
         http_client: Client::new(),
         config: Config {
             ollama_url: "http://localhost:11434".to_string(),
         },
         api_requests,
         prom_registry: registry,
+        clients: Arc::new(Mutex::new(HashMap::new())),
     });
 
     tokio::spawn(core::queue::consumer::run(state.clone()));

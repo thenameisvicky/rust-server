@@ -7,6 +7,7 @@ use std::sync::Arc;
 #[derive(Serialize)]
 pub struct JobPayload {
     pub prompt: String,
+    pub client_id: String,
 }
 
 pub async fn publish_job(state: Arc<AppState>, payload: JobPayload) {
