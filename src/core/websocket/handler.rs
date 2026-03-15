@@ -22,7 +22,7 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
 
     let (tx, mut rx) = mpsc::channel::<String>(100);
 
-    state.clients.lock().await.insert(client_id.clone(), tx);
+    state.clients.insert(client_id.clone(), tx);
 
     let (mut sender, mut receiver) = socket.split();
 
@@ -43,7 +43,7 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
 
     while let Some(_) = receiver.next().await {}
 
-    state.clients.lock().await.remove(&client_id);
+    state.clients.remove(&client_id);
 
     println!("Client disconnected {}", client_id);
 }

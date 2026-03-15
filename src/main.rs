@@ -1,10 +1,9 @@
 use std::sync::Arc;
 
+use dashmap::DashMap;
 use lapin::{Connection, ConnectionProperties};
 use prometheus::{Counter, Registry};
 use reqwest::Client;
-use std::collections::HashMap;
-use tokio::sync::Mutex;
 
 mod api;
 mod core;
@@ -33,10 +32,12 @@ async fn main() {
         },
         api_requests,
         prom_registry: registry,
-        clients: Arc::new(Mutex::new(HashMap::new())),
+        clients: DashMap::new(),
     });
 
-    tokio::spawn(core::queue::consumer::run(state.clone()));
+    for _ in 0..4 {
+        tokio::spawn(core::queue::consumer::run(state.clone()));
+    }
 
     api::router::run(state).await;
 }

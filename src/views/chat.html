@@ -2,55 +2,125 @@
 <html>
   <head>
     <title>RelayAI</title>
+
     <style>
       body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         font-family: Arial, sans-serif;
-        padding: 20px;
+        background: #f5f7fb;
       }
+
+      .container {
+        width: 650px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        padding: 30px;
+      }
+
+      .logo {
+        text-align: center;
+        font-size: 42px;
+        margin-bottom: 5px;
+      }
+
+      .logo .relay {
+        font-family: cursive;
+        font-weight: 900;
+      }
+
+      .logo .ai {
+        font-weight: bold;
+        color: red;
+      }
+
+      .desc {
+        text-align: center;
+        color: #666;
+        margin-bottom: 25px;
+      }
+
+      .input-area {
+        display: flex;
+        gap: 10px;
+      }
+
       #prompt {
-        width: 400px;
-        padding: 8px;
+        flex: 1;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        font-size: 14px;
       }
+
       button {
-        padding: 8px 16px;
-        margin-left: 5px;
+        padding: 10px 18px;
+        border: none;
+        background: #3b82f6;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
       }
+
+      button:hover {
+        background: #2563eb;
+      }
+
       #output {
         margin-top: 20px;
-        border: 1px solid #ddd;
+        border: 1px solid #eee;
+        border-radius: 8px;
         padding: 15px;
-        width: 500px;
-        min-height: 100px;
+        height: 250px;
+        overflow-y: auto;
+        background: #fafafa;
       }
+
+      .message {
+        margin-bottom: 12px;
+        line-height: 1.5;
+      }
+
       .user {
-        color: blue;
+        color: #2563eb;
+        font-weight: 600;
       }
+
       .llm {
-        color: green;
+        color: #111;
       }
+
       .loading {
         font-style: italic;
-        color: gray;
+        color: #888;
       }
     </style>
   </head>
+
   <body>
-    <h2>RelayAI</h2>
-    <p>
-      A real-time AI messaging engine that generates and delivers personalized
-      messages using user data, RAG pipelines, and LLMs
-    </p>
+    <div class="container">
+      <div class="logo">
+        <span class="relay">Relay</span><span class="ai">AI</span>
+      </div>
 
-    <input id="prompt" placeholder="Enter prompt..." />
-    <button onclick="generate()">Generate</button>
+      <div class="desc">Generate customized messages for you CRM</div>
 
-    <div id="output"></div>
+      <div class="input-area">
+        <input id="prompt" placeholder="Ask something..." />
+        <button onclick="generate()">Generate</button>
+      </div>
+
+      <div id="output"></div>
+    </div>
 
     <script>
       let ws;
       let client_id = null;
-      let reconnectInterval = 2000;
-      let connected = false;
+      let ai_message = null;
 
       const output = document.getElementById("output");
 
@@ -58,35 +128,27 @@
         ws = new WebSocket("ws://localhost:3000/ws");
 
         ws.onopen = () => {
-          connected = true;
           console.log("Connected to WS server");
         };
+
+        let aiMessage = null;
 
         ws.onmessage = (event) => {
           if (event.data.startsWith("CLIENT_ID:")) {
             client_id = event.data.replace("CLIENT_ID:", "");
-            console.log("Client ID:", client_id);
+            console.log(client_id);
             return;
           }
 
-          const loadingElem = document.querySelector(".loading");
-          if (loadingElem) loadingElem.remove();
+          document.querySelector(".loading")?.remove();
 
-          const p = document.createElement("p");
-          p.className = "llm";
-          p.textContent = event.data;
-          output.appendChild(p);
-        };
+          if (!aiMessage) {
+            aiMessage = document.createElement("p");
+            aiMessage.className = "llm";
+            output.appendChild(aiMessage);
+          }
 
-        ws.onclose = () => {
-          connected = false;
-          console.log("WebSocket disconnected. Reconnecting...");
-          setTimeout(connectWS, reconnectInterval);
-        };
-
-        ws.onerror = (err) => {
-          console.error("WebSocket error:", err);
-          ws.close();
+          aiMessage.textContent += event.data;
         };
       }
 
@@ -94,31 +156,37 @@
 
       async function generate() {
         if (!client_id) {
-          console.error("No client ID yet. Wait for WS connection.");
+          console.log("Waiting for client id");
           return;
         }
-        const promptInput = document.getElementById("prompt");
-        const prompt = promptInput.value.trim();
+
+        const prompt = document.getElementById("prompt").value.trim();
         if (!prompt) return;
-        output.innerHTML = "";
-        const userMsg = document.createElement("p");
-        userMsg.className = "user";
-        userMsg.textContent = prompt;
-        output.appendChild(userMsg);
-        const loading = document.createElement("p");
-        loading.className = "loading";
-        loading.textContent = "Loading...";
+
+        document.getElementById("prompt").value = "";
+
+        const user = document.createElement("div");
+        user.className = "message user";
+        user.textContent = prompt;
+
+        output.appendChild(user);
+
+        const loading = document.createElement("div");
+        loading.className = "message loading";
+        loading.textContent = "AI is thinking...";
+
         output.appendChild(loading);
-        try {
-          await fetch("http://localhost:3000/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt, client_id }),
-          });
-        } catch (err) {
-          loading.textContent = "Error sending prompt";
-          console.error(err);
-        }
+
+        output.scrollTop = output.scrollHeight;
+
+        await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: prompt,
+            client_id: client_id,
+          }),
+        });
       }
     </script>
   </body>

@@ -13,6 +13,7 @@ struct JobPayload {
 #[derive(Deserialize, Debug)]
 struct LLMResponse {
     response: String,
+    done: bool,
 }
 
 pub async fn run(state: Arc<AppState>) {
@@ -41,52 +42,81 @@ pub async fn run(state: Arc<AppState>) {
 
     while let Some(delivery) = consumer.next().await {
         let delivery = delivery.unwrap();
+        let state = state.clone();
 
-        let payload: JobPayload = serde_json::from_slice(&delivery.data).unwrap();
+        tokio::spawn(async move {
+            let payload: JobPayload = serde_json::from_slice(&delivery.data).unwrap();
+            let client_id = payload.client_id.clone();
 
-        println!("Received prompt: {}", payload.prompt);
+            println!("[TASK] Starting inference for :{}", client_id);
 
-        let response = match state
-            .http_client
-            .post(format!("{}/api/generate", state.config.ollama_url))
-            .json(&serde_json::json!({
-                "model": "llama3.2",
-                "prompt": payload.prompt,
-                "stream": false
-            }))
-            .send()
-            .await
-        {
-            Ok(r) => r,
-            Err(err) => {
-                let tx = {
-                    let clients = state.clients.lock().await;
-                    clients.get(&payload.client_id).cloned()
-                };
+            let system_prompt = r#"
+                You are an AI assistant that writes short outreach messages.
+                Rules:
+                - Maximum 4 lines.
+                - Be clear, friendly, and natural.
+                - Avoid fluff or filler.
+                - Use common abbreviations where appropriate (AI, CRM, IT, API).
+                - Prefer concise wording over long explanations.
+                - Personalize using provided context.
+                - Do not repeat the prompt.
+                - Do not add greetings like "Hope you're doing well".
+                Structure:
+                Line 1: Context / personalization
+                Line 2: Problem or insight
+                Line 3: Suggestion or value
+                Line 4: Light CTA
+                Output only the message text, If context is insufficient generate generic text do not invent facts
+            "#;
 
-                if let Some(tx) = tx {
-                    let _ = tx.send(format!("LLM error: {}", err)).await;
+            let _final_prompt = format!("{}\n\nUser Context:\n{}\n", system_prompt, payload.prompt);
+
+            let response = state
+                .http_client
+                .post(format!("{}/api/generate", state.config.ollama_url))
+                .json(&serde_json::json!({
+                    "model": "llama3.2",
+                    "prompt": _final_prompt,
+                    "stream": true,
+                    "temperature": 0.3,
+                    "top_p": 0.9,
+                    "top_k": 40,
+                    "repeat_penalty": 1.1,
+                    "max_tokens": 200,
+                    "stop": ["\n\n"]
+                }))
+                .send()
+                .await;
+
+            match response {
+                Ok(res) => {
+                    let mut stream = res.bytes_stream();
+                    let tx = state.clients.get(&client_id);
+
+                    if let Some(tx) = tx {
+                        while let Some(chunk) = stream.next().await {
+                            if let Ok(bytes) = chunk {
+                                let text = String::from_utf8_lossy(&bytes);
+
+                                for line in text.lines() {
+                                    if let Ok(json) = serde_json::from_str::<LLMResponse>(line) {
+                                        let _ = tx.send(json.response.clone()).await;
+                                        if json.done {
+                                            break;
+                                        }
+                                    } else {
+                                        let _ = tx.send(line.to_string()).await;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
-
-                continue;
+                Err(e) => println!("Error hitting Ollama: {}", e),
             }
-        };
 
-        let body = response.text().await.unwrap();
-
-        let llm_resp: LLMResponse = serde_json::from_str(&body).unwrap();
-
-        println!("LLM response {:?}", llm_resp);
-
-        let tx = {
-            let clients = state.clients.lock().await;
-            clients.get(&payload.client_id).cloned()
-        };
-
-        if let Some(tx) = tx {
-            let _ = tx.send(llm_resp.response.clone()).await;
-        }
-
-        delivery.ack(BasicAckOptions::default()).await.unwrap();
+            let _ = delivery.ack(BasicAckOptions::default()).await;
+            println!("[Task] Finished for: {}", client_id);
+        });
     }
 }
