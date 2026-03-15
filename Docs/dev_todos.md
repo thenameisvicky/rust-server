@@ -9,18 +9,18 @@
 
 [X] Implement tokens streaming to client.
 [X] Configure ollama to run in parallel to support parallel prompts (3).
-[] Implement Synchronus API endpoint and test it with WATT application.
-[] Implement prometheus scraping track metrics every metrics needed.
 
 # March 21 2026
 
+[] Implement Synchronus API endpoint and test it with WATT application.
+[] Implement prometheus scraping track metrics every metrics needed.
 [] Build grafana dashboard.
 [] Containerize this backend with Docker compose.
-[] Decide what logs to store and what not from docker container/prometheus.
-[] Run this engine image in personal laptop.
 
 # March 22 2026
 
+[] Decide what logs to store and what not from docker container/prometheus.
+[] Run this engine image in personal laptop.
 [] Deploy backend in Railway with github action - in a machine with same spec as personal laptop.
 [] Build perfect system prompt and choose a perfect model for text generation.
 [] Implement fake RAG.
