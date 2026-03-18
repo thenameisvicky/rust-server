@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RelayAI | Setup & Monitoring</title>
+    <style>
+      :root {
+        --bg: #0f172a;
+        --card: #1e293b;
+        --accent: #38bdf8;
+        --success: #4ade80;
+        --error: #f87171;
+      }
+      body {
+        font-family: "Inter", system-ui, sans-serif;
+        background: var(--bg);
+        color: white;
+        padding: 40px;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 700px;
+        margin: auto;
+      }
+      .card {
+        background: var(--card);
+        padding: 30px;
+        border-radius: 16px;
+        border: 1px solid #334155;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        margin-top: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.8rem;
+      }
+      .status-pill {
+        padding: 4px 12px;
+        border-radius: 99px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+      .up {
+        background: rgba(74, 222, 128, 0.2);
+        color: var(--success);
+      }
+      .down {
+        background: rgba(248, 113, 113, 0.2);
+        color: var(--error);
+      }
+      code {
+        background: #000;
+        padding: 12px;
+        border-radius: 8px;
+        color: var(--accent);
+        display: block;
+        margin: 15px 0;
+        font-family: "Fira Code", monospace;
+        font-size: 0.9rem;
+        overflow-x: auto;
+      }
+      .btn {
+        display: inline-block;
+        width: 100%;
+        padding: 14px;
+        border-radius: 8px;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+        text-align: center;
+        text-decoration: none;
+        margin-top: 10px;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: var(--bg);
+      }
+      .btn-scale {
+        background: var(--success);
+        color: var(--bg);
+        margin-top: 20px;
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        opacity: 0.9;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin: 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <h1>
+          🛡️ RelayAI <span id="main-status" class="status-pill up">Online</span>
+        </h1>
+        <p>
+          Your Rust-based AI Relay engine is active. Use this dashboard to
+          verify your local infrastructure.
+        </p>
+
+        <div class="grid">
+          <div class="card" style="margin: 0; padding: 15px">
+            <strong>RabbitMQ</strong>
+            <div
+              id="status-rabbit"
+              class="status-pill down"
+              style="margin-top: 8px; display: inline-block"
+            >
+              Checking...
+            </div>
+          </div>
+          <div class="card" style="margin: 0; padding: 15px">
+            <strong>Ollama AI</strong>
+            <div
+              id="status-ollama"
+              class="status-pill down"
+              style="margin-top: 8px; display: inline-block"
+            >
+              Checking...
+            </div>
+          </div>
+        </div>
+
+        <a href="/chat.html" class="btn btn-primary">Open Chat UI</a>
+      </div>
+
+      <div class="card">
+        <h2>Scale to Production</h2>
+        <p>
+          Running the binary standalone is great for testing. To run the full
+          orchestrated stack (RelayAI + Queue + LLM), use Docker Compose:
+        </p>
+
+        <a href="/api/download" class="btn btn-scale"
+          >Download docker-compose.yml</a
+        >
+
+        <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 15px">
+          Once downloaded, run: <code>docker-compose up -d</code>
+        </p>
+      </div>
+    </div>
+
+    <script>
+      //   async function checkHealth() {
+      //     try {
+      //       const res = await fetch("/api/health");
+      //       const data = await res.json();
+
+      //       const rabbit = document.getElementById("status-rabbit");
+      //       const ollama = document.getElementById("status-ollama");
+
+      //       rabbit.innerText = data.rabbit_mq ? "Connected" : "Disconnected";
+      //       rabbit.className = `status-pill ${data.rabbit_mq ? "up" : "down"}`;
+
+      //       ollama.innerText = data.ollama ? "Connected" : "Disconnected";
+      //       ollama.className = `status-pill ${data.ollama ? "up" : "down"}`;
+      //     } catch (e) {
+      //       console.error("Health check failed", e);
+      //     }
+      //   }
+
+      //   setInterval(checkHealth, 5000);
+      //   checkHealth();
+    </script>
+  </body>
+</html>
