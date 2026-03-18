@@ -4,6 +4,7 @@ use tower_http::services::ServeDir;
 
 use crate::core::websocket::handler::ws_handler;
 use crate::modules::agent::routes::agent_routes;
+use crate::modules::miscs::routes::miscs_routes;
 use crate::state::AppState;
 
 pub async fn run(state: Arc<AppState>) {
@@ -11,6 +12,7 @@ pub async fn run(state: Arc<AppState>) {
 
     let app = Router::new()
         .merge(agent_routes())
+        .merge(miscs_routes())
         .route("/ws", get(ws_handler))
         .nest_service("/", static_files_service)
         .with_state(state);
