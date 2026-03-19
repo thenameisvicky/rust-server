@@ -2021,26 +2021,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "relayai"
-version = "0.1.0"
-dependencies = [
- "axum",
- "dashmap",
- "futures-util",
- "lapin",
- "metrics-exporter-prometheus",
- "prometheus",
- "reqwest",
- "serde",
- "serde_json",
- "tokio",
- "tokio-tungstenite 0.28.0",
- "tower-http",
- "tracing",
- "uuid",
-]
-
-[[package]]
 name = "reqwest"
 version = "0.11.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2475,6 +2455,26 @@ name = "stable_deref_trait"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
+
+[[package]]
+name = "stardust"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "dashmap",
+ "futures-util",
+ "lapin",
+ "metrics-exporter-prometheus",
+ "prometheus",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-tungstenite 0.28.0",
+ "tower-http",
+ "tracing",
+ "uuid",
+]
 
 [[package]]
 name = "subtle"

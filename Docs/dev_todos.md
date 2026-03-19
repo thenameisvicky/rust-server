@@ -39,5 +39,5 @@
 [] Share client to customers (Kongu Icecreams, satheesh studio).
 [] Implement real RAG.
 [] Bring in billing system integerating chargebee or stripe.
-[] Split RelayAI from wAI explore distrubutions.
-[] Calculate infra cost and strategize cost cutting for RelayAI.
+[] Split Stardust from wAI explore distrubutions.
+[] Calculate infra cost and strategize cost cutting for Stardust.
