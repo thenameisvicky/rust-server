@@ -1,4 +1,4 @@
-name: Production
+name: Production-Client
 
 on:
   workflow_dispatch:
