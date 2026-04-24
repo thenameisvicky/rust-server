@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tower_http::services::ServeDir;
 
 use crate::core::websocket::handler::ws_handler;
-use crate::modules::agent::routes::agent_routes;
+use crate::modules::retrieval::routes::retrieval_routes;
 use crate::modules::ingestion::routes::ingestion_routes;
 use crate::state::AppState;
 
@@ -11,7 +11,7 @@ pub async fn run(state: Arc<AppState>) {
     let static_files_service = ServeDir::new("src/views");
 
     let app = Router::new()
-        .merge(agent_routes())
+        .merge(retrieval_routes())
         .merge(ingestion_routes())
         .route("/ws", get(ws_handler))
         .nest_service("/", static_files_service)

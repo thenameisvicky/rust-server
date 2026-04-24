@@ -5,7 +5,7 @@ sequenceDiagram
     participant Client
     participant REST_API as REST API (Axum)
     participant WS as WebSocket /ws
-    participant Chat as Chat Agent Module
+    participant Chat as Chat retrieval Module
     participant AppState
     participant LLM as LLM Module (Ollama API)
 

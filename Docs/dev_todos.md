@@ -1,7 +1,7 @@
 # Stardust AI use cases
 
-- Big or small SaaS who needs to provide context to their Agents from documents.
-- Internal coding agent needs context from the code base (Link github and document prepared automatically and injected into quadrant something like this).
+- Big or small SaaS who needs to provide context to their retrievals from documents.
+- Internal coding retrieval needs context from the code base (Link github and document prepared automatically and injected into quadrant something like this).
 And more i need to research and add it here close deals with them.
 
 # Todos stardustAI
@@ -64,5 +64,5 @@ And more i need to research and add it here close deals with them.
 [] Replace RabbitMQ, add scheduler
 [] Add evaluation dashboard
 [] Graph RAG
-[] Agentic RAG
+[] retrievalic RAG
 [] vLLM
