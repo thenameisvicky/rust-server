@@ -50,6 +50,8 @@ pub async fn run(state: Arc<AppState>) {
             let client_id = payload.client_id.clone();
 
             println!("[TASK] Starting inference for :{}", client_id);
+            println!("\n\nPrompt : {}", payload.prompt);
+            println!("\n\nContext : {}", payload.retrieval_context);
 
             // let system_prompt = r#"
             //     You are an retrieval-augmented assistant.
