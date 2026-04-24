@@ -50,31 +50,10 @@ pub async fn run(state: Arc<AppState>) {
             let client_id = payload.client_id.clone();
 
             println!("[TASK] Starting inference for :{}", client_id);
-            println!("\n\nPrompt : {}", payload.prompt);
-            println!("\n\nContext : {}", payload.retrieval_context);
-
-            // let system_prompt = r#"
-            //     You are an retrieval-augmented assistant.
-            //     Rules:
-            //     - Always use the provided context to answer questions.
-            //     - If the context does not contain the answer, say "I can't find the information you're looking for"
-            //     - Be clear, friendly, and natural.
-            //     - Avoid fluff or filler.
-            //     - Use common abbreviations where appropriate (AI, CRM, IT, API).
-            //     - Prefer concise wording over long explanations.
-            //     - Personalize using provided context.
-            //     - Do not repeat the prompt.
-            //     - Do not add greetings like "Hope you're doing well".
-            //     Structure:
-            //     Line 1: Context / personalization
-            //     Line 2: Problem or insight
-            //     Line 3: Suggestion or value
-            //     Line 4: Light CTA
-            //     Output only the message text, If context is insufficient generate generic text do not invent facts
-            // "#;
 
             let _final_prompt = format!(
-                "Answer strictly using the context below.
+                "Answer ONLY from the context.
+                If the answer is IMPLIED or reasonably inferred, answer it confidently.
                 Context:{}
                 Question:{}
                 If not found, say: Not found in any of the documents",

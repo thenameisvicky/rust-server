@@ -1,13 +1,3 @@
-# Problem we are solving
-
-- Bharath CEO of Nile a icecream factory has to generate and send invoice to customers in bulk.
-- He wants to send his QR to customer in whatsapp attached along with the payment info.
-- He has ledger for each customer ledger -> customer is one-to-one mapping.
-- stardust ai is not the straight use case for him but wAI is.
-- Tamilnadu has no use case for RAG directly, for stardust ai i need to learn about a bussiness from abroad and try to solve a problem in it.
-- Alternatively i can reach out to founders and ask them to use my RAG engine and see the outputs and close deals with them - this is the realistic approach.
-- Before all this i need to build wAI the pipeline for Bharath and others too has use cases.
-
 # Stardust AI use cases
 
 - Big or small SaaS who needs to provide context to their Agents from documents.
@@ -60,12 +50,6 @@ And more i need to research and add it here close deals with them.
 [] APIs (Ingestion & Reterival).
 [] Source attribution (return doc references).
 
-## April 19 2026
-
-[] Basic metrics(latency, success rates).
-[] Simple logs.
-[] Improve landing page.
-
 ## Upcoming todos
 
 [] Hard latency target (<1.5s).
@@ -82,16 +66,3 @@ And more i need to research and add it here close deals with them.
 [] Graph RAG
 [] Agentic RAG
 [] vLLM
-[] Multimodal
-[] Implement prometheus scraping track metrics every metrics needed.
-[] Build grafana dashboard.
-
-# Todos
-
-- AI-powered communication system for businesses to engege with customers.
-
-## April 04 2026
-
-## April 05 2026
-
-## Upcoming todos

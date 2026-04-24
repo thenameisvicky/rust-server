@@ -52,7 +52,7 @@ pub async fn ingest_handler(
 
         println!("Received file: {}, size: {} bytes", filename, bytes.len());
 
-        let chunks = chunk_with_overlap(&text, 300, 70);
+        let chunks = chunk_with_overlap(&text, 300, 100);
 
         println!("Generated {} chunks for file: {}", chunks.len(), filename);
 
