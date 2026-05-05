@@ -7,7 +7,7 @@
 
 **Stardust RAG** is a high-performance, self-hosted Retrieval-Augmented Generation (RAG) engine designed for AI-powered SaaS. Built with **Rust**, it prioritizes low latency, minimal memory footprint, and horizontal scalability.
 
-**[View Live Landing Page](https://thenameisvicky.github.io/stardust-ai/)**
+**[View Live Landing Page](https://thenameisvicky.github.io/stardust-RAG/)**
 
 ---
 
